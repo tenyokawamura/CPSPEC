@@ -3,9 +3,10 @@
 heainit
 
 name_inevt=$1
+name_session=$2
 
 xselect << EOF
-MAXI_J1820p020
+${name_session}
 set datadir .
 read event ${name_inevt}
 y
