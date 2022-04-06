@@ -18,7 +18,6 @@ def main():
     name_infits=argv[2]
     # Filename of PSD
     name_outfits=argv[3]
-    print(rebin, name_infits, name_outfits)
     # --------------------------- #
     # ----- Setting (end)   ----- #
     # --------------------------- #
@@ -41,8 +40,8 @@ def main():
     ps.n_bin=ft.n_bin
     for i_int in range(ft.n_int):
         print('(Interval {0})'.format(i_int+1))
-        fs, bs, rate_mea=ft.read_ft(i_int=i_int)
-        ps.calc_psd(bs=bs, rate_mea=rate_mea)
+        fs, bs, rate_mea, rate_var_mea=ft.read_ft(i_int=i_int)
+        ps.calc_psd(bs=bs, rate_mea=rate_mea, rate_var_mea=rate_var_mea)
     # ----------------------------------------- #
     # ----- Calculate periodogram (end)   ----- #
     # ----------------------------------------- #
@@ -51,8 +50,10 @@ def main():
     # ----- Calculate PSD (begin) ----- #
     # --------------------------------- #
     ps.fs=ft.fs
+    if rebin<=1:
+        print('Error: parameter \'rebin\' must be greater than 1.')
+        sys.exit()
     ps.rebin=rebin
-    print(rebin)
     ps.average_psd()
     # --------------------------------- #
     # ----- Calculate PSD (end)   ----- #

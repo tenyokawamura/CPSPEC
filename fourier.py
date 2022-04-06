@@ -5,10 +5,20 @@ class Fourier:
     def __init__(self):
         pass
 
-    def fft_calc(self, xs):
+    def fft_calc(self, xs, dxs):
         self.n_bin=len(xs)
         self.x_mea=np.mean(xs)
         xs=xs-self.x_mea
+
+        # 2022/02/02, Necessary for calculating power spectrum of Gaussian noise
+        # ------------------------------------------------- #
+        # --- Average of variance of count rate (start) --- #
+        # ------------------------------------------------- #
+        dx2s=dxs**2
+        self.dx2_mea=np.mean(dx2s)
+        # ------------------------------------------------- #
+        # --- Average of variance of count rate (end)   --- #
+        # ------------------------------------------------- #
 
         bs=np.fft.fft(a=xs)
         fs=np.fft.fftfreq(n=self.n_bin, d=self.dt)
@@ -54,6 +64,7 @@ class Fourier:
         hdu_ext.header['FMAX']    =(self.f_max  , 'Maximum frequency [Hz]')
         hdu_ext.header['INDINT']  =(self.i_int  , 'Index of interval')
         hdu_ext.header['RATEM']   =(self.x_mea  , 'Mean count rate [count s^-1]')
+        hdu_ext.header['VRATEM']  =(self.dx2_mea, 'Mean variance of count rate [count^2 s^-2]')
         hdu_ext.header['TELESCOP']=(telescope   , 'Telescope')
         hdu_ext.header['INSTRUME']=(instrument  , 'Instrument')
         hdu_ext.header['OBJECT']  =(source      , 'Object')
@@ -110,5 +121,7 @@ class Fourier:
         fs=hdus[i_int+1].data['FREQ'] # Index 0 ... Primary HDU
         bs=hdus[i_int+1].data['FT']
         rate_mea=hdus[i_int+1].header['RATEM']
-        return fs, bs, rate_mea
+        rate_var_mea=hdus[i_int+1].header['VRATEM']
+        hdus.close()
+        return fs, bs, rate_mea, rate_var_mea
 

@@ -5,17 +5,19 @@ class PowerSpectrum:
     def __init__(self):
         self.first_psd=True
 
-    def calc_psd(self, bs, rate_mea):
+    def calc_psd(self, bs, rate_mea, rate_var_mea):
         # Normalization for (rms/mean)^2/Hz
         norm=2.*self.dt/((rate_mea**2)*self.n_bin)
         psds=norm*(np.abs(bs)**2)
 
         if self.first_psd==True:
-            self.rates_mea=rate_mea
+            self.rates_mea    =rate_mea
+            self.rates_var_mea=rate_var_mea # Necessary for Gaussian noise (2022/02/02)
             self.psdss=psds
             self.first_psd=False
         else:
-            self.rates_mea=np.append(self.rates_mea, rate_mea)
+            self.rates_mea    =np.append(self.rates_mea,     rate_mea)
+            self.rates_var_mea=np.append(self.rates_var_mea, rate_var_mea)
             self.psdss=np.vstack((self.psdss, psds))
 
     def average_psd(self):
@@ -59,14 +61,20 @@ class PowerSpectrum:
 
             f_mid_min=f_mid_max
             f_mid_max*=self.rebin
-            #print(f_mid_min, f_mid_max)
         # ----- Logarithmic rebin (end)   ----- #
         
-        self.fs_rebin=(self.fs_min_rebin+self.fs_max_rebin)/2.
+        self.fs_rebin =(self.fs_min_rebin+self.fs_max_rebin)/2.
         self.dfs_rebin=(self.fs_max_rebin-self.fs_min_rebin)/2.
-        #self.psds_noi=(2./np.mean(self.rates_mea))*np.ones(len(self.fs_min_rebin))
-        self.psds_noi=np.mean(2./self.rates_mea)*np.ones(len(self.fs_min_rebin))
         self.ns_int  =self.n_int*np.ones(len(self.fs_min_rebin))
+        ######################################
+        ### Assume purely Poissonian noise ###
+        ######################################
+        #self.psds_noi=(2./np.mean(self.rates_mea))*np.ones(len(self.fs_min_rebin))
+        #self.psds_noi=np.mean(2./self.rates_mea)*np.ones(len(self.fs_min_rebin)) # This should be more reasonable.
+        #######################################################
+        ### Assume Gaussian noise (see Vaughan et al. 2003) ###
+        #######################################################
+        self.psds_noi=np.mean(2.*self.dt*self.rates_var_mea/(self.rates_mea**2))*np.ones(len(self.fs_min_rebin)) 
 
     def write_psd(\
         self,\
@@ -107,8 +115,6 @@ class PowerSpectrum:
         hdu_ext.header['CHMAX']   =(ch_max      , 'Minimum channel')
         hdu_ext.header['DT']      =(self.dt     , 'Sampling interval')
         hdu_ext.header['NBIN']    =(self.n_bin  , 'Number of bin per interval')
-        #hdu_ext.header['FMIN']    =(self.f_min  , 'Minimum frequency [Hz]')
-        #hdu_ext.header['FMAX']    =(self.f_max  , 'Maximum frequency [Hz]')
         hdu_ext.header['REBIN']   =(self.rebin  , 'Logarithmic rebinning')
         #hdu_ext.header['RATEM']   =(self.x_mea  , 'Mean count rate [count s^-1]')
         hdu_ext.header['TELESCOP']=(telescope   , 'Telescope')
@@ -120,4 +126,15 @@ class PowerSpectrum:
         hdu_pri=fits.PrimaryHDU(data=None, header=None)
         hdu=fits.HDUList([hdu_pri, hdu_ext])
         hdu.writeto(name_fits, overwrite=True)
+
+    def read_psd(self, name_file):
+        hdus=fits.open(name_file)
+        fs          =hdus[1].data['F'] # Index 0 ... Primary HDU
+        psds_raw_mea=hdus[1].data['PSDRM']
+        psds_raw_sig=hdus[1].data['PSDRS']
+        psds_noi    =hdus[1].data['PSDN']
+        ns_fbin     =hdus[1].data['NFBIN']
+        ns_int      =hdus[1].data['NINT']
+        hdus.close()
+        return fs, psds_raw_mea, psds_raw_sig, psds_noi, ns_fbin, ns_int
 

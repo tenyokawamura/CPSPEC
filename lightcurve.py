@@ -1,6 +1,7 @@
 import numpy as np
 from numpy import random
 import astropy.io.fits as fits
+import sys
 
 class LightCurve:
     def __init__(self):
@@ -20,7 +21,7 @@ class LightCurve:
 
     def read_data(self, name_file):
         self.name_file=name_file
-        hdus=fits.open(name_file)
+        hdus=fits.open(self.name_file)
         self.header=hdus[1].header
         self.data  =hdus[1].data
         self.telescope =self.header['TELESCOP']
@@ -29,6 +30,7 @@ class LightCurve:
         self.exposure  =self.header['EXPOSURE']
         self.dt        =self.header['TIMEDEL']
         self.n_row     =self.header['NAXIS2']
+        hdus.close()
 
     def print_obs_info(self):
         print('------------------------------')
@@ -39,8 +41,122 @@ class LightCurve:
         print('{0:<32}: {1}'      .format('Source'           , self.source))
         print('{0:<32}: {1:.0f} s'.format('Exposure'         , self.exposure))
         print('{0:<32}: {1:.2g} s'.format('Sampling interval', self.dt))
-        print('{0:<32}: {1}'      .format('Number of rows'   , self.n_row)) # for what?
+        print('{0:<32}: {1}'      .format('Number of rows'   , self.n_row))
         print('')
+
+    def convert_counts2rate(self):
+        self.rates_rebin=self.data['COUNTS']/\
+            ((np.roll(self.data['TIME'], -1)-self.data['TIME'])*self.data['FRACEXP'])
+        self.errors_rebin=self.data['ERROR']/\
+            ((np.roll(self.data['TIME'], -1)-self.data['TIME'])*self.data['FRACEXP'])
+        self.times_rebin   =self.data['TIME'][:-1]
+        self.rates_rebin   =self.rates_rebin[:-1]
+        self.errors_rebin  =self.errors_rebin[:-1]
+        self.fracexps_rebin=self.data['FRACEXP'][:-1]
+        if len(self.data[0])==5:
+            self.deadcs_rebin=self.data['DEADC'][:-1]
+
+    def rebin_lightcurve(self, dt_rebin):
+        i_start=0
+        t_start=self.data['TIME'][i_start]
+        if len(self.data[0])==4:
+            for i_row in range(self.n_row):
+                dt=self.data['TIME'][i_row]-t_start
+                if dt>=dt_rebin:
+                    i_end=i_row
+                    rates   =self.data['RATE'   ][i_start:i_end]
+                    errors  =self.data['ERROR'  ][i_start:i_end]
+                    fracexps=self.data['FRACEXP'][i_start:i_end]
+                    n_rebin=len(rates)
+                    time_rebin   =self.data['TIME'][i_start]
+                    rate_rebin   =np.mean(rates)
+                    error_rebin  =np.sqrt(np.sum(errors**2))/n_rebin # Propagation of error
+                    fracexp_rebin=np.mean(fracexps)
+                    
+                    if i_start==0:
+                        self.times_rebin   =time_rebin
+                        self.rates_rebin   =rate_rebin
+                        self.errors_rebin  =error_rebin
+                        self.fracexps_rebin=fracexp_rebin
+                    else:
+                        self.times_rebin   =np.append(self.times_rebin,    time_rebin)
+                        self.rates_rebin   =np.append(self.rates_rebin,    rate_rebin)
+                        self.errors_rebin  =np.append(self.errors_rebin,   error_rebin)
+                        self.fracexps_rebin=np.append(self.fracexps_rebin, fracexp_rebin)
+
+                    i_start=i_row
+                    t_start=self.data['TIME'][i_start]
+
+        elif len(self.data[0])==5:
+            for i_row in range(self.n_row):
+                dt=self.data['TIME'][i_row]-t_start
+                if dt>=dt_rebin:
+                    i_end=i_row
+                    rates   =self.data['RATE'   ][i_start:i_end]
+                    errors  =self.data['ERROR'  ][i_start:i_end]
+                    fracexps=self.data['FRACEXP'][i_start:i_end]
+                    deadcs  =self.data['DEADC'  ][i_start:i_end]
+                    n_rebin=len(rates)
+                    time_rebin   =self.data['TIME'][i_start]
+                    rate_rebin   =np.mean(rates)
+                    error_rebin  =np.sqrt(np.sum(errors**2))/n_rebin # Propagation of error
+                    fracexp_rebin=np.mean(fracexps)
+                    deadc_rebin  =np.mean(deadcs)
+                    
+                    if i_start==0:
+                        self.times_rebin   =time_rebin
+                        self.rates_rebin   =rate_rebin
+                        self.errors_rebin  =error_rebin
+                        self.fracexps_rebin=fracexp_rebin
+                        self.deadcs_rebin  =deadc_rebin
+                    else:
+                        self.times_rebin   =np.append(self.times_rebin,    time_rebin)
+                        self.rates_rebin   =np.append(self.rates_rebin,    rate_rebin)
+                        self.errors_rebin  =np.append(self.errors_rebin,   error_rebin)
+                        self.fracexps_rebin=np.append(self.fracexps_rebin, fracexp_rebin)
+                        self.deadcs_rebin  =np.append(self.deadcs_rebin,   deadc_rebin)
+
+                    i_start=i_row
+                    t_start=self.data['TIME'][i_start]
+
+    def write_lightcurve(self, name_file):
+        hdus_in=fits.open(self.name_file)
+            
+        ########## PRIMARY (Column 0) ##########
+        hdu0=fits.PrimaryHDU(data=hdus_in[0].data)
+        hdu0.header=hdus_in[0].header
+
+        ########## Column 1 ##########
+        # D: double precision float (64-bit), E: single precision float (32-bit)
+        if len(self.data[0])==4:
+            hdu1=fits.BinTableHDU.from_columns([\
+                fits.Column(name='TIME'   , format='D', array=self.times_rebin),\
+                fits.Column(name='RATE'   , format='E', array=self.rates_rebin),\
+                fits.Column(name='ERROR'  , format='E', array=self.errors_rebin),\
+                fits.Column(name='FRACEXP', format='E', array=self.fracexps_rebin)])
+        elif len(self.data[0])==5:
+            hdu1=fits.BinTableHDU.from_columns([\
+                fits.Column(name='TIME'   , format='D', array=self.times_rebin),\
+                fits.Column(name='RATE'   , format='E', array=self.rates_rebin),\
+                fits.Column(name='ERROR'  , format='E', array=self.errors_rebin),\
+                fits.Column(name='FRACEXP', format='E', array=self.fracexps_rebin),\
+                fits.Column(name='DEADC'  , format='E', array=self.deadcs_rebin)])
+        hdu1.header=hdus_in[1].header
+        # Time resolution
+        hdu1.header['TIMEDEL']=np.amin(self.times_rebin[1:]-self.times_rebin[:-1])
+
+        ########## Column 2 ##########
+        hdu2=fits.BinTableHDU(data=hdus_in[2].data)
+        hdu2.header=hdus_in[2].header
+
+        ########## Column 3 ##########
+        hdu3=fits.BinTableHDU(data=hdus_in[3].data)
+        hdu3.header=hdus_in[3].header
+
+        hdus_in.close()
+
+        hdus=fits.HDUList([hdu0, hdu1, hdu2, hdu3])
+        hdus.writeto(name_file, overwrite=True)
 
     def prepare_ft(self):
         self.n_int_max=self.n_row//self.n_bin
@@ -77,7 +193,7 @@ class LightCurve:
         i_bin_max=len(self.data)-1
         while True:
             if i_bin>i_bin_max:
-                return None, None, None
+                return None, None, None, None
             t_bin=self.data[i_bin][0]
             if i_bin==self.i_bin_start:
                 t_start=t_bin
@@ -94,11 +210,17 @@ class LightCurve:
                     #xs=np.zeros(n_d_real)
                     #for i_d_real in range(n_d_real):
                     #    xs[i_d_real]=data_int_real[i_d_real][1]
-                    rates_int=data_int_real['RATE']
+                    rates_int =data_int_real['RATE']
+                    drates_int=data_int_real['ERROR'] # 2022/02/02, necessary for Gaussian noise
 
                     # --------------------------------------------------- #
                     # ----- Simulate and insert random data (begin) ----- #
                     # --------------------------------------------------- #
+                    ###############################################
+                    ### self.n_gap must be zero for now         ###
+                    ### because drates_int is not handled here. ###
+                    ### (2022/02/02)                            ###
+                    ###############################################
                     if self.n_gap!=0:
                         #x_mea, x_var=mea_var_calc_1d(xs=xs)
                         #x_sig=np.sqrt(x_var)
@@ -123,7 +245,7 @@ class LightCurve:
 
                     self.i_bin_start=i_bin+1
 
-                    return t_start, t_end, rates_int
+                    return t_start, t_end, rates_int, drates_int
 
             else:
                 t_g=t_bin-t_exp
