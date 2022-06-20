@@ -8,9 +8,9 @@ def main():
     # ----------------------------- #
     # ---------- Setting ---------- #
     # ----------------------------- #
-    #####################
-    ### Power spectra ###
-    #####################
+    #name_inevt='ni1200120104_0mpu7_cl_bary_fpm.evt'
+    name_inevt='ni1200120104_0mpu7_cl_fpm.evt'
+
     # --- #
     #n_dir=12
     #names_dir_raw=['./P0114661003_lc/P0114661003{0:02}/'.format(i+1) for i in range(n_dir)]
@@ -38,72 +38,20 @@ def main():
     #maximize=True
     #frac_gap=0
     #### PSD, CSD ###
-    #rebin=1.1
-    # --- #
-
-    #####################
-    ### Cross spectra ###
-    #####################
-    n_dir=12
-    names_dir_raw=['./P0114661003_lc/P0114661003{0:02}/'.format(i+1) for i in range(n_dir)]
-    names_dir_pro=['./P0114661003{0:02}_product/'.format(i+1) for i in range(n_dir)]
-    # Common data extraction
-    e_min_le=2.6
-    e_max_le=4.8
-    e_min_me=7
-    e_max_me=11
-    e_min_he=25
-    e_max_he=35
-    # Energy bands
-    es_min       =[2.6,   4.8, 7,    7,    11,   23,   25,   35,   48,   67,   100,  150]
-    es_max       =[4.8,   7,   11,   11,   23,   35,   35,   48,   67,   100,  150,  200]
-    instruments  =['LE', 'LE', 'LE', 'ME', 'ME', 'ME', 'HE', 'HE', 'HE', 'HE', 'HE', 'HE']
-    # Reference band
-    e_ref_min      =2.6
-    e_ref_max      =4.8
-    instrument_ref ='LE'
-    ### Light curve rebining ###
-    dt_rebin=1./128. #[s]
-    ### FFT ###
-    n_bin=2**15
-    n_int=100
-    maximize=True
-    frac_gap=0
-    ### PSD, CSD ###
-    rebin=1.2
-    # --- #
-    #n_dir=1
-    #names_dir_raw=['./P0114661003_lc/P0114661003{0:02}/'.format(i+1) for i in range(n_dir)]
-    #names_dir_pro=['./P0114661003{0:02}_product/'.format(i+1) for i in range(n_dir)]
-    ## Common data extraction
-    #e_min_le=2.6
-    #e_max_le=4.8
-    #e_min_me=7
-    #e_max_me=11
-    #e_min_he=25
-    #e_max_he=35
-    ## Energy bands
-    #es_min       =[2.6]
-    #es_max       =[4.8]
-    #instruments  =['LE']
-    ## Reference band
-    #e_ref_min      =2.6
-    #e_ref_max      =4.8
-    #instrument_ref ='LE'
-    #### Light curve rebining ###
-    #dt_rebin=1./128. #[s]
-    #### FFT ###
-    #n_bin=2**15
-    #n_int=100
-    #maximize=True
-    #frac_gap=0
-    #### PSD, CSD ###
     #rebin=1.2
     # --- #
 
     # -------------------------- #
     # ---------- Main ---------- #
     # -------------------------- #
+    ###################################################
+    ########## Generate energy spectra (PHA) ##########
+    ###################################################
+    # ----- PHA ----- #
+    cmd='sh xselect_pha.sh {0}'.format(name_inevt)
+    tokens=shlex.split(cmd)
+    subprocess.run(tokens)
+
     ##########################################
     ########## Light curve rebining ##########
     ##########################################
@@ -249,26 +197,26 @@ def main():
     #        command_do_calc_csdf(pars=pars)
 
     # ----- Multi process ----- #
-    time_start=time.time()
-    first=True
-    for name_dir_raw, name_dir_pro in zip(names_dir_raw, names_dir_pro):
-        for e_min, e_max, instrument in zip(es_min, es_max, instruments):
-            pars=[name_dir_pro,\
-                e_min,     e_max,     instrument,\
-                e_ref_min, e_ref_max, instrument_ref,\
-                rebin]
-            if first==True:
-                first=False
-                parss=[pars]
-            else:
-                parss.append(pars)
-    with ProcessPoolExecutor() as executor:
-        executor.map(command_do_calc_csdf, parss)
-    time_end=time.time()
-    time_process=time_end-time_start
-    print('------------------------------')
-    print('(Process efficiency for calculating CSD)')
-    print('Run time: {0:.1f} s'.format(time_process))
+    #time_start=time.time()
+    #first=True
+    #for name_dir_raw, name_dir_pro in zip(names_dir_raw, names_dir_pro):
+    #    for e_min, e_max, instrument in zip(es_min, es_max, instruments):
+    #        pars=[name_dir_pro,\
+    #            e_min,     e_max,     instrument,\
+    #            e_ref_min, e_ref_max, instrument_ref,\
+    #            rebin]
+    #        if first==True:
+    #            first=False
+    #            parss=[pars]
+    #        else:
+    #            parss.append(pars)
+    #with ProcessPoolExecutor() as executor:
+    #    executor.map(command_do_calc_csdf, parss)
+    #time_end=time.time()
+    #time_process=time_end-time_start
+    #print('------------------------------')
+    #print('(Process efficiency for calculating CSD)')
+    #print('Run time: {0:.1f} s'.format(time_process))
 
 def command_do_convert_counts2rate(pars):
     name_dir_raw=pars[0]

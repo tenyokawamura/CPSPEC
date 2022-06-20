@@ -3,7 +3,7 @@
 heainit
 
 name_inevt=$1
-name_session=$2
+name_session='session'
 
 xselect << EOF
 ${name_session}
