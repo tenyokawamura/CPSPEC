@@ -12,14 +12,10 @@ def main():
         print('Error: Number of inputs is wrong(0).(must be {1})'\
             .format(len(sys.argv), 9))
         sys.exit()
-    ## Minimum channel
-    #ch_min=int(argv[1])
-    ## Maximum channel
-    #ch_max=int(argv[2])
     # Minimum channel
-    ch_min=int(float(argv[1]))
+    ch_min=int(argv[1])
     # Maximum channel
-    ch_max=int(float(argv[2]))
+    ch_max=int(argv[2])
     # Number of bins per interval
     n_bin=int(argv[3])
     # Number of intervals

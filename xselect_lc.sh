@@ -3,12 +3,11 @@
 heainit
 
 name_inevt=$1
-name_session=$2
-ch_min=$3
-ch_max=$4
-ch_min_str=$5
-ch_max_str=$6
-binsize=$7
+name_outlc=$2
+name_session=$3
+ch_min=$4
+ch_max=$5
+binsize=$6
 
 xselect << EOF
 ${name_session}
@@ -22,7 +21,7 @@ ${ch_min}
 ${ch_max}
 extract curve
 save curve
-${name_inevt/.evt/_${ch_min_str}_${ch_max_str}}
+${name_outlc}
 exit
 no
 EOF
