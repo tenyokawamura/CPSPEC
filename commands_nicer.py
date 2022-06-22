@@ -19,13 +19,15 @@ def main():
     if multi==False:
         # ----- Single process ----- #
         for ch_min, ch_max in zip(inputs_nicer.chs_min, inputs_nicer.chs_max):
-            pars=[inputs_nicer.name_inevt, inputs_nicer.session, ch_min, ch_max, inputs_nicer.binsize]
+            name_outlc=inputs_nicer.name_inevt.replace('.evt', '_{0:04}_{1:04}.lc'.format(int(ch_min), int(ch_max)))
+            pars=[inputs_nicer.name_inevt, name_outlc, inputs_nicer.session, ch_min, ch_max, inputs_nicer.binsize]
             command_do_extract_lc(pars=pars)
     elif multi==True:
         # ----- Multi process ----- #
         first=True
         for ch_min, ch_max in zip(inputs_nicer.chs_min, inputs_nicer.chs_max):
-            pars=[inputs_nicer.name_inevt, inputs_nicer.session, ch_min, ch_max, inputs_nicer.binsize]
+            name_outlc=inputs_nicer.name_inevt.replace('.evt', '_{0:04}_{1:04}.lc'.format(int(ch_min), int(ch_max)))
+            pars=[inputs_nicer.name_inevt, name_outlc, inputs_nicer.session, ch_min, ch_max, inputs_nicer.binsize]
             if first==True:
                 first=False
                 parss=[pars]
@@ -41,8 +43,8 @@ def main():
     #########################
     ########## FFT ##########
     #########################
-    #multi=True
-    multi=False
+    multi=True
+    #multi=False
     time_start=time.time()
     if multi==False:
         # ----- Single process ----- #
@@ -150,11 +152,11 @@ def main():
 
 def command_do_extract_lc(pars):
     name_inevt  =pars[0]
-    session     =pars[1]
-    ch_min      =int(pars[2])
-    ch_max      =int(pars[3])
-    binsize     =pars[4]
-    name_outlc  =name_inevt.replace('.evt', '_{0:04}_{1:04}.lc'.format(int(ch_min), int(ch_max))) # No extension
+    name_outlc  =pars[1]
+    session     =pars[2]
+    ch_min      =int(pars[3])
+    ch_max      =int(pars[4])
+    binsize     =pars[5]
 
     cmd='sh xselect_lc.sh {0} {1} {2} {3} {4} {5}'\
         .format(name_inevt, name_outlc, session, ch_min, ch_max, binsize)
