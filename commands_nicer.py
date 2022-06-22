@@ -9,7 +9,6 @@ def main():
     # -------------------------- #
     # ---------- Main ---------- #
     # -------------------------- #
-    '''
     ##########################################
     ########## Extract light curves ##########
     ##########################################
@@ -75,8 +74,8 @@ def main():
     #########################
     ########## PSD ##########
     #########################
-    #multi=True
-    multi=False
+    multi=True
+    #multi=False
     time_start=time.time()
     if multi==False:
         # ----- Single process ----- #
@@ -98,18 +97,17 @@ def main():
             else:
                 parss.append(pars)
         with ProcessPoolExecutor() as executor:
-            executor.map(command_do_fft, parss)
+            executor.map(command_do_calc_psd, parss)
     time_end=time.time()
     time_process=time_end-time_start
     print('------------------------------')
     print('Run time: {0:.1f} s'.format(time_process))
-    '''
 
     #########################
     ########## CSD ##########
     #########################
-    #multi=True
-    multi=False
+    multi=True
+    #multi=False
     time_start=time.time()
     if multi==False:
         # ----- Single process ----- #
@@ -137,14 +135,13 @@ def main():
                 '_{0:04}_{1:04}_{2:04}_{3:04}_csdf.fits'.format(int(ch_min), int(ch_max), int(inputs_nicer.ch_ref_min), int(inputs_nicer.ch_ref_max)))
             pars=[name_infits_fft, name_infits_psd, name_infits_fft_ref, name_infits_psd_ref, name_outfits,\
                   ch_min, ch_max, inputs_nicer.ch_ref_min, inputs_nicer.ch_ref_max, inputs_nicer.rebin]
-            command_do_calc_csdf(pars=pars)
             if first==True:
                 first=False
                 parss=[pars]
             else:
                 parss.append(pars)
         with ProcessPoolExecutor() as executor:
-            executor.map(command_do_fft, parss)
+            executor.map(command_do_calc_csdf, parss)
     time_end=time.time()
     time_process=time_end-time_start
     print('------------------------------')
