@@ -1,47 +1,46 @@
+import numpy as np 
+import astropy.io.fits as fits
+import sys 
+from sys import argv
 import matplotlib.pyplot as plt 
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.ticker as ptick
-import matplotlib.gridspec as gridspec
-import astropy.io.fits as fits
-import numpy as np 
-import sys 
-from sys import argv
-from include import inputs_plot
 def main():
     # ----- Setting ----- #
-    name_outpdf=inputs_plot.name_inevt.replace('.evt', '_psds.pdf')
-    colors=['red', 'black', 'green', 'blue']
-    xs_pl=[1.e-3, 2.e2]
-    ys_pl=[2.e-4, 1.e-1]
+    names_intxt=[\
+        'ni1200120110_csd_phase_0051_0100_0101_0260_xspec.txt',\
+        'ni1200120110_csd_phase_0261_0480_0101_0260_xspec.txt',\
+        'ni1200120110_csd_phase_0481_0700_0101_0260_xspec.txt',\
+        'ni1200120110_csd_phase_0701_1100_0101_0260_xspec.txt'\
+        ]
+    chs_min=[51,  261, 481, 701]
+    chs_max=[100, 480, 700, 1100]
+    name_outpdf='./csd_phase_nicer_xspec.pdf'
+    xs_pl=[6.e-4, 1.e1]
+    ys_pl=[-0.2, 0.3]
+    colors=['black', 'red', 'green', 'blue', 'cyan', 'magenta']
     out_pdf=PdfPages(name_outpdf)
 
     # ----- Main ----- #
-    # --------------------- #
-    # ----- Read data ----- #
-    # --------------------- #
     plt.rcParams['font.family'] = 'Arial'
     plt.rcParams['figure.subplot.bottom']=0.15
     fig=plt.figure(figsize=(9, 6))
     ax=fig.add_subplot(1, 1, 1)
 
-    for i_n, (ch_min, ch_max) in enumerate(zip(inputs_plot.chs_min, inputs_plot.chs_max)):
-        name_infits=inputs_plot.name_inevt.replace('.evt', '_{0:04}_{1:04}_psd.fits'.format(int(ch_min), int(ch_max)))
-        hdus=fits.open(name_infits)
-        fs=hdus[1].data['F']
-        dfs=hdus[1].data['DF']
-        psds_raw=hdus[1].data['PSDRM']
-        dpsds_raw=hdus[1].data['PSDRS']
-        psds_noi=hdus[1].data['PSDN']
-        psds=psds_raw-psds_noi
-        dpsds=dpsds_raw
+    for i_n, name_intxt in enumerate(names_intxt):
+        e_min=chs_min[i_n]*1.e-2
+        e_max=chs_max[i_n]*1.e-2
 
-        e_min=1.e-2*ch_min
-        e_max=1.e-2*ch_max
+        fs, dfs, phs, dphs\
+        =np.loadtxt(fname=name_intxt,\
+                    dtype='float',\
+                    skiprows=0,\
+                    unpack=True)
 
         ax.errorbar(x=fs,\
-                    y=fs*psds,\
+                    y=phs,\
                     xerr=dfs,\
-                    yerr=fs*dpsds,\
+                    yerr=dphs,\
                     capsize=0.,\
                     color=colors[i_n],\
                     marker='None',\
@@ -50,7 +49,8 @@ def main():
                     linestyle='solid',\
                     linewidth=2.4,\
                     alpha=0.8,\
-                    label='{0:.1f} - {1:.1f} keV'.format(e_min, e_max))
+                    label='{0:.1f}-{1:.1f} keV'\
+                        .format(e_min, e_max))
 
     ax.set_xlim(xs_pl[0], xs_pl[1])
     #ax.set_xlim(2.*10**(-3), 8.*10**(1))
@@ -61,9 +61,9 @@ def main():
     #ax.set_yticks(np.linspace(-1200, 1200, 13))
     #ax.set_yticks(np.linspace(-1200, 1200, 25), minor=True)
     ax.set_xlabel('$f$ (Hz)', fontsize=20)
-    ax.set_ylabel('$f\,P(f)$ ($(\sigma / \mu)^2$)', fontsize=20)
+    ax.set_ylabel('$\phi (f)$ (rad)', fontsize=20)
     ax.set_xscale('log')
-    ax.set_yscale('log')
+    #ax.set_yscale('log')
     #ax.xaxis.set_major_formatter(ptick.ScalarFormatter(useMathText=True))
     #ax.ticklabel_format(style='sci',axis='x',scilimits=(0,0))
     #ax.xaxis.offsetText.set_fontsize(16)
@@ -78,9 +78,8 @@ def main():
               loc='upper left',\
               borderaxespad=1.,\
               fancybox=0,\
-              frameon=False,\
               edgecolor='black',\
-              fontsize=16).get_frame().set_linewidth(1.2)
+              fontsize=14).get_frame().set_linewidth(1.2)
     ax.tick_params(which='major',\
                    direction="in",\
                    length=10,\
@@ -101,7 +100,8 @@ def main():
                    bottom=True,\
                    right=True,\
                    left=True)
-    #ax.set_title('Reference: {0:.1f} - {1:.1f} keV'.format(e_ref_min, e_ref_max), fontsize=20)
+    #ax.set_title('{0:.2f}-{1:.2f} keV'\
+    #             .format(e_min, e_max), fontsize=18)
     out_pdf.savefig(transparent=True)
     plt.close()
     out_pdf.close()

@@ -115,6 +115,8 @@ def main():
     cs.write_csdf(\
         ch_min=ft.ch_min,\
         ch_max=ft.ch_max,\
+        ch_ref_min=ft_ref.ch_min,\
+        ch_ref_max=ft_ref.ch_max,\
         name_fits=name_outfits,\
         telescope=ft.telescope,\
         instrument=ft.instrument,\

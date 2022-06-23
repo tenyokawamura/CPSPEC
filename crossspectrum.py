@@ -158,6 +158,8 @@ class CrossSpectrum:
         self,\
         ch_min,\
         ch_max,\
+        ch_ref_min,\
+        ch_ref_max,\
         name_fits,\
         telescope,\
         instrument,\
@@ -229,6 +231,8 @@ class CrossSpectrum:
 
         hdu_ext.header['CHMIN']   =(ch_min      , 'Minimum channel')
         hdu_ext.header['CHMAX']   =(ch_max      , 'Minimum channel')
+        hdu_ext.header['REFMIN']  =(ch_ref_min  , 'Reference minimum channel')
+        hdu_ext.header['REFMAX']  =(ch_ref_max  , 'Reference minimum channel')
         hdu_ext.header['DT']      =(self.dt     , 'Sampling interval')
         hdu_ext.header['NBIN']    =(self.n_bin  , 'Number of bin per interval')
         hdu_ext.header['REBIN']   =(self.rebin  , 'Logarithmic rebinning')
