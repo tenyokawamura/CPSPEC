@@ -3,7 +3,8 @@
 heainit
 
 name_inevt=$1
-name_session='session'
+name_outpha=$2
+name_session=$3
 
 xselect << EOF
 ${name_session}
@@ -12,7 +13,7 @@ read event ${name_inevt}
 y
 extract spectrum
 save spectrum
-${name_inevt/.evt/}
+${name_outpha}
 exit
 no
 EOF

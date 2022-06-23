@@ -9,6 +9,20 @@ def main():
     # -------------------------- #
     # ---------- Main ---------- #
     # -------------------------- #
+    #####################################
+    ########## Extract spectra ##########
+    #####################################
+    time_start=time.time()
+    name_outpha=inputs_nicer.name_inevt.replace('.evt', '.pha')
+    pars=[inputs_nicer.name_inevt, name_outpha, inputs_nicer.session]
+    command_do_extract_pha(pars=pars)
+    time_end=time.time()
+    time_process=time_end-time_start
+    print('------------------------------')
+    print('Run time: {0:.1f} s'.format(time_process))
+
+
+    '''
     ##########################################
     ########## Extract light curves ##########
     ##########################################
@@ -146,6 +160,16 @@ def main():
     time_process=time_end-time_start
     print('------------------------------')
     print('Run time: {0:.1f} s'.format(time_process))
+    '''
+
+def command_do_extract_pha(pars):
+    name_inevt =pars[0]
+    name_outpha=pars[1]
+    session    =pars[2]
+
+    cmd='sh xselect_pha.sh {0} {1} {2}'.format(name_inevt, name_outpha, session)
+    tokens=shlex.split(cmd)
+    subprocess.run(tokens)
 
 def command_do_extract_lc(pars):
     name_inevt  =pars[0]

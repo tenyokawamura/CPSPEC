@@ -5,8 +5,8 @@ chs_min   =[101, ch_ref_min, 481, 701 ]
 chs_max   =[260, ch_ref_max, 700, 1100]
 
 # Response files
-name_rmf='ni1200120130.rmf'
-name_arf='ni1200120130.arf'
+name_rmf='ni1200120130_timing.rmf'
+name_arf='ni1200120130_timing.arf'
 # Response characteristics
 f_min=1.e-3 #[Hz]
 f_max=8.e1  #[Hz]
