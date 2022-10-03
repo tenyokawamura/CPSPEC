@@ -8,6 +8,22 @@ def main():
     # ----------------------------- #
     # ---------- Setting ---------- #
     # ----------------------------- #
+    obsids=['P011466108401', 'P011466108402', 'P011466108403']
+    #obsids=['P011466108401']
+    instruments=['LE', 'ME', 'HE']
+    #instruments=['LE']
+    #chs_min=[106, 296, 556, 816]
+    #chs_max=[295, 555, 815, 1288]
+    chs_min={'LE': [106, 296, 556, 816],  'ME': [137, 342], 'HE': [14, 24, 37, 60]}
+    chs_max={'LE': [295, 555, 815, 1288], 'ME': [341, 546], 'HE': [23, 36, 59, 93]}
+    # FFT
+    n_bin=2**12
+    n_int=100
+    maximize=True
+    frac_gap=0
+    # PSD/CSD
+    rebin=1.4
+
     #####################
     ### Power spectra ###
     #####################
@@ -44,33 +60,33 @@ def main():
     #####################
     ### Cross spectra ###
     #####################
-    n_dir=12
-    names_dir_raw=['./P0114661003_lc/P0114661003{0:02}/'.format(i+1) for i in range(n_dir)]
-    names_dir_pro=['./P0114661003{0:02}_product/'.format(i+1) for i in range(n_dir)]
-    # Common data extraction
-    e_min_le=2.6
-    e_max_le=4.8
-    e_min_me=7
-    e_max_me=11
-    e_min_he=25
-    e_max_he=35
-    # Energy bands
-    es_min       =[2.6,   4.8, 7,    7,    11,   23,   25,   35,   48,   67,   100,  150]
-    es_max       =[4.8,   7,   11,   11,   23,   35,   35,   48,   67,   100,  150,  200]
-    instruments  =['LE', 'LE', 'LE', 'ME', 'ME', 'ME', 'HE', 'HE', 'HE', 'HE', 'HE', 'HE']
-    # Reference band
-    e_ref_min      =2.6
-    e_ref_max      =4.8
-    instrument_ref ='LE'
-    ### Light curve rebining ###
-    dt_rebin=1./128. #[s]
-    ### FFT ###
-    n_bin=2**15
-    n_int=100
-    maximize=True
-    frac_gap=0
-    ### PSD, CSD ###
-    rebin=1.2
+    #n_dir=12
+    #names_dir_raw=['./P0114661003_lc/P0114661003{0:02}/'.format(i+1) for i in range(n_dir)]
+    #names_dir_pro=['./P0114661003{0:02}_product/'.format(i+1) for i in range(n_dir)]
+    ## Common data extraction
+    #e_min_le=2.6
+    #e_max_le=4.8
+    #e_min_me=7
+    #e_max_me=11
+    #e_min_he=25
+    #e_max_he=35
+    ## Energy bands
+    #es_min       =[2.6,   4.8, 7,    7,    11,   23,   25,   35,   48,   67,   100,  150]
+    #es_max       =[4.8,   7,   11,   11,   23,   35,   35,   48,   67,   100,  150,  200]
+    #instruments  =['LE', 'LE', 'LE', 'ME', 'ME', 'ME', 'HE', 'HE', 'HE', 'HE', 'HE', 'HE']
+    ## Reference band
+    #e_ref_min      =2.6
+    #e_ref_max      =4.8
+    #instrument_ref ='LE'
+    #### Light curve rebining ###
+    #dt_rebin=1./128. #[s]
+    #### FFT ###
+    #n_bin=2**15
+    #n_int=100
+    #maximize=True
+    #frac_gap=0
+    #### PSD, CSD ###
+    #rebin=1.2
     # --- #
     #n_dir=1
     #names_dir_raw=['./P0114661003_lc/P0114661003{0:02}/'.format(i+1) for i in range(n_dir)]
@@ -104,137 +120,73 @@ def main():
     # -------------------------- #
     # ---------- Main ---------- #
     # -------------------------- #
-    ##########################################
-    ########## Light curve rebining ##########
-    ##########################################
-    # ----- Single process ----- #
-    #for name_dir_raw, name_dir_pro in zip(names_dir_raw, names_dir_pro):
-    #    for e_min, e_max, instrument in zip(es_min, es_max, instruments):
-    #        pars=[name_dir_raw, name_dir_pro, e_min, e_max, instrument, dt_rebin]
-    #        command_do_rebin_lc(pars=pars)
-
-    # ----- Multi process ----- #
-    #time_start=time.time()
-    #first=True
-    #for name_dir_raw, name_dir_pro in zip(names_dir_raw, names_dir_pro):
-    #    for e_min, e_max, instrument in zip(es_min, es_max, instruments):
-    #        pars=[name_dir_raw, name_dir_pro, e_min, e_max, instrument, dt_rebin]
-    #        if first==True:
-    #            first=False
-    #            parss=[pars]
-    #        else:
-    #            parss.append(pars)
-    #with ProcessPoolExecutor() as executor:
-    #    executor.map(command_do_rebin_lc, parss)
-    #time_end=time.time()
-    #time_process=time_end-time_start
-    #print('------------------------------')
-    #print('(Process efficiency for rebinning light curves)')
-    #print('Run time: {0:.1f} s'.format(time_process))
-
-    ###########################################################
-    ########## Extract common (rebinned) light curve ##########
-    ###########################################################
-    # ----- Single process ---- #
-    #for name_dir_pro in names_dir_pro:
-    #    pars=[name_dir_pro, e_min_le, e_max_le, e_min_me, e_max_me, e_min_he, e_max_he]
-    #    command_do_extract_index_rebin(pars=pars)
-    #for name_dir_pro in names_dir_pro:
-    #    for e_min, e_max, instrument in zip(es_min, es_max, instruments):
-    #        pars=[name_dir_pro, e_min, e_max, instrument]
-    #    command_do_extract_lc_rebin(pars=pars)
-
-    # ----- Multi process ---- #
-    #time_start=time.time()
-    #first=True
-    #for name_dir_pro in names_dir_pro:
-    #    pars=[name_dir_pro, e_min_le, e_max_le, e_min_me, e_max_me, e_min_he, e_max_he]
-    #    if first==True:
-    #        first=False
-    #        parss=[pars]
-    #    else:
-    #        parss.append(pars)
-    #with ProcessPoolExecutor() as executor:
-    #    executor.map(command_do_extract_index_rebin, parss)
-    #time_end=time.time()
-    #time_process=time_end-time_start
-    #print('------------------------------')
-    #print('(Process efficiency for extracting common indices)')
-    #print('Run time: {0:.1f} s'.format(time_process))
-
-    #time_start=time.time()
-    #first=True
-    #for name_dir_pro in names_dir_pro:
-    #    for e_min, e_max, instrument in zip(es_min, es_max, instruments):
-    #        pars=[name_dir_pro, e_min, e_max, instrument]
-    #        if first==True:
-    #            first=False
-    #            parss=[pars]
-    #        else:
-    #            parss.append(pars)
-    #with ProcessPoolExecutor() as executor:
-    #    executor.map(command_do_extract_lc_rebin, parss)
-    #time_end=time.time()
-    #time_process=time_end-time_start
-    #print('------------------------------')
-    #print('(Process efficiency for extracting common light curves)')
-    #print('Run time: {0:.1f} s'.format(time_process))
-
     #########################
     ########## FFT ##########
     #########################
     # ----- Single process ----- #
-    #for name_dir_raw, name_dir_pro in zip(names_dir_raw, names_dir_pro):
-    #    for e_min, e_max, instrument in zip(es_min, es_max, instruments):
-    #        pars=[name_dir_raw, name_dir_pro, e_min, e_max, instrument, n_bin, n_int, maximize, frac_gap]
-    #        command_do_fft(pars=pars)
+    #for instrument in instruments:
+    #    for obsid in obsids:
+    #        for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
+    #            name_inlc='HXMT_{0}_{1}-Evt_FFFFFF_V1_L1P_lc_{2:04}_{3:04}_net.lc'.format(obsid, instrument, int(ch_min), int(ch_max))
+    #            name_outfits='HXMT_{0}_{1}_{2:04}_{3:04}_net_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
+    #            pars=[name_inlc, name_outfits, ch_min, ch_max, instrument, n_bin, n_int, maximize, frac_gap]
+    #            command_do_fft(pars=pars)
 
     # ----- Multi process ----- #
-    #time_start=time.time()
-    #first=True
-    #for name_dir_raw, name_dir_pro in zip(names_dir_raw, names_dir_pro):
-    #    for e_min, e_max, instrument in zip(es_min, es_max, instruments):
-    #        pars=[name_dir_raw, name_dir_pro, e_min, e_max, instrument, n_bin, n_int, maximize, frac_gap]
-    #        if first==True:
-    #            first=False
-    #            parss=[pars]
-    #        else:
-    #            parss.append(pars)
-    #with ProcessPoolExecutor() as executor:
-    #    executor.map(command_do_fft, parss)
-    #time_end=time.time()
-    #time_process=time_end-time_start
-    #print('------------------------------')
-    #print('(Process efficiency for FFT)')
-    #print('Run time: {0:.1f} s'.format(time_process))
+    time_start=time.time()
+    first=True
+    for instrument in instruments:
+        for obsid in obsids:
+            for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
+                name_inlc='HXMT_{0}_{1}-Evt_FFFFFF_V1_L1P_lc_{2:04}_{3:04}_net.lc'.format(obsid, instrument, int(ch_min), int(ch_max))
+                name_outfits='HXMT_{0}_{1}_{2:04}_{3:04}_net_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
+                pars=[name_inlc, name_outfits, ch_min, ch_max, instrument, n_bin, n_int, maximize, frac_gap]
+                if first==True:
+                    first=False
+                    parss=[pars]
+                else:
+                    parss.append(pars)
+    with ProcessPoolExecutor() as executor:
+        executor.map(command_do_fft, parss)
+    time_end=time.time()
+    time_process=time_end-time_start
+    print('------------------------------')
+    print('(Process efficiency for FFT)')
+    print('Run time: {0:.1f} s'.format(time_process))
 
     #########################
     ########## PSD ##########
     #########################
     # ----- Single process ----- #
-    #for name_dir_raw, name_dir_pro in zip(names_dir_raw, names_dir_pro):
-    #    for e_min, e_max, instrument in zip(es_min, es_max, instruments):
-    #        pars=[name_dir_pro, e_min, e_max, instrument, rebin]
-    #        command_do_calc_psd(pars=pars)
+    #for instrument in instruments:
+    #    for obsid in obsids:
+    #        for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
+    #            name_infits='HXMT_{0}_{1}_{2:04}_{3:04}_net_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
+    #            name_outfits=name_infits.replace('_fft.fits', '_psd.fits')
+    #            pars=[name_infits, name_outfits, ch_min, ch_max, instrument, rebin]
+    #            command_do_calc_psd(pars=pars)
 
     # ----- Multi process ----- #
-    #time_start=time.time()
-    #first=True
-    #for name_dir_raw, name_dir_pro in zip(names_dir_raw, names_dir_pro):
-    #    for e_min, e_max, instrument in zip(es_min, es_max, instruments):
-    #        pars=[name_dir_pro, e_min, e_max, instrument, rebin]
-    #        if first==True:
-    #            first=False
-    #            parss=[pars]
-    #        else:
-    #            parss.append(pars)
-    #with ProcessPoolExecutor() as executor:
-    #    executor.map(command_do_calc_psd, parss)
-    #time_end=time.time()
-    #time_process=time_end-time_start
-    #print('------------------------------')
-    #print('(Process efficiency for calculating PSD)')
-    #print('Run time: {0:.1f} s'.format(time_process))
+    time_start=time.time()
+    first=True
+    for instrument in instruments:
+        for obsid in obsids:
+            for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
+                name_infits='HXMT_{0}_{1}_{2:04}_{3:04}_net_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
+                name_outfits=name_infits.replace('_fft.fits', '_psd.fits')
+                pars=[name_infits, name_outfits, ch_min, ch_max, instrument, rebin]
+                if first==True:
+                    first=False
+                    parss=[pars]
+                else:
+                    parss.append(pars)
+    with ProcessPoolExecutor() as executor:
+        executor.map(command_do_calc_psd, parss)
+    time_end=time.time()
+    time_process=time_end-time_start
+    print('------------------------------')
+    print('(Process efficiency for calculating PSD)')
+    print('Run time: {0:.1f} s'.format(time_process))
 
     #########################
     ########## CSD ##########
@@ -249,26 +201,26 @@ def main():
     #        command_do_calc_csdf(pars=pars)
 
     # ----- Multi process ----- #
-    time_start=time.time()
-    first=True
-    for name_dir_raw, name_dir_pro in zip(names_dir_raw, names_dir_pro):
-        for e_min, e_max, instrument in zip(es_min, es_max, instruments):
-            pars=[name_dir_pro,\
-                e_min,     e_max,     instrument,\
-                e_ref_min, e_ref_max, instrument_ref,\
-                rebin]
-            if first==True:
-                first=False
-                parss=[pars]
-            else:
-                parss.append(pars)
-    with ProcessPoolExecutor() as executor:
-        executor.map(command_do_calc_csdf, parss)
-    time_end=time.time()
-    time_process=time_end-time_start
-    print('------------------------------')
-    print('(Process efficiency for calculating CSD)')
-    print('Run time: {0:.1f} s'.format(time_process))
+    #time_start=time.time()
+    #first=True
+    #for name_dir_raw, name_dir_pro in zip(names_dir_raw, names_dir_pro):
+    #    for e_min, e_max, instrument in zip(es_min, es_max, instruments):
+    #        pars=[name_dir_pro,\
+    #            e_min,     e_max,     instrument,\
+    #            e_ref_min, e_ref_max, instrument_ref,\
+    #            rebin]
+    #        if first==True:
+    #            first=False
+    #            parss=[pars]
+    #        else:
+    #            parss.append(pars)
+    #with ProcessPoolExecutor() as executor:
+    #    executor.map(command_do_calc_csdf, parss)
+    #time_end=time.time()
+    #time_process=time_end-time_start
+    #print('------------------------------')
+    #print('(Process efficiency for calculating CSD)')
+    #print('Run time: {0:.1f} s'.format(time_process))
 
 def command_do_convert_counts2rate(pars):
     name_dir_raw=pars[0]
@@ -391,23 +343,15 @@ def command_do_extract_lc_rebin(pars):
     subprocess.run(tokens)
 
 def command_do_fft(pars):
-    name_dir_raw=pars[0]
-    name_dir_pro=pars[1]
-    e_min       =pars[2]
-    e_max       =pars[3]
+    name_inlc   =pars[0]
+    name_outfits=pars[1]
+    ch_min      =pars[2]
+    ch_max      =pars[3]
     instrument  =pars[4]
     n_bin       =pars[5]
     n_int       =pars[6]
     maximize    =pars[7]
     frac_gap    =pars[8]
-
-    # For calculation of power spectrum
-    #name_inlc   =name_dir_pro+'{0}_net_{1:04}_{2:04}_rebin.lc'.format(instrument, int(e_min), int(e_max))
-    #name_outfits=name_dir_pro+'{0}_net_{1:04}_{2:04}_rebin_fft.fits'.format(instrument, int(e_min), int(e_max))
-
-    # For calculation of cross spectrum
-    name_inlc   =name_dir_pro+'{0}_net_{1:04}_{2:04}_rebin_common.lc'.format(instrument, int(e_min), int(e_max))
-    name_outfits=name_dir_pro+'{0}_net_{1:04}_{2:04}_rebin_common_fft.fits'.format(instrument, int(e_min), int(e_max))
 
     # File (directory) existence
     exist=os.path.exists(name_inlc)
@@ -415,24 +359,17 @@ def command_do_fft(pars):
         print('Warning: {0} does not exist.'.format(name_inlc))
         return
     cmd='python do_fft.py {0} {1} {2} {3} {4} {5} {6} {7}'\
-        .format(e_min, e_max, n_bin, n_int, maximize, frac_gap, name_inlc, name_outfits)
+        .format(ch_min, ch_max, n_bin, n_int, maximize, frac_gap, name_inlc, name_outfits)
     tokens=shlex.split(cmd)
     subprocess.run(tokens)
 
 def command_do_calc_psd(pars):
-    name_dir_pro=pars[0]
-    e_min       =pars[1]
-    e_max       =pars[2]
-    instrument  =pars[3]
-    rebin       =pars[4]
-
-    # For calculation of power spectrum
-    #name_infits =name_dir_pro+'{0}_net_{1:04}_{2:04}_rebin_fft.fits'.format(instrument, int(e_min), int(e_max))
-    #name_outfits=name_dir_pro+'{0}_net_{1:04}_{2:04}_rebin_psd.fits'.format(instrument, int(e_min), int(e_max))
-
-    # For calculation of cross spectrum
-    name_infits =name_dir_pro+'{0}_net_{1:04}_{2:04}_rebin_common_fft.fits'.format(instrument, int(e_min), int(e_max))
-    name_outfits=name_dir_pro+'{0}_net_{1:04}_{2:04}_rebin_common_psd.fits'.format(instrument, int(e_min), int(e_max))
+    name_infits =pars[0]
+    name_outfits=pars[1]
+    ch_min      =pars[2]
+    ch_max      =pars[3]
+    instrument  =pars[4]
+    rebin       =pars[5]
 
     # File (directory) existence
     exist=os.path.exists(name_infits)
