@@ -8,113 +8,19 @@ def main():
     # ----------------------------- #
     # ---------- Setting ---------- #
     # ----------------------------- #
-    obsids=['P011466108401', 'P011466108402', 'P011466108403']
-    #obsids=['P011466108401']
+    # --- #
+    obsid='P0114661036'
     instruments=['LE', 'ME', 'HE']
-    #instruments=['LE']
-    #chs_min=[106, 296, 556, 816]
-    #chs_max=[295, 555, 815, 1288]
-    chs_min={'LE': [106, 296, 556, 816],  'ME': [137, 342], 'HE': [14, 24, 37, 60]}
-    chs_max={'LE': [295, 555, 815, 1288], 'ME': [341, 546], 'HE': [23, 36, 59, 93]}
+    n_seg=3
+    chs_min={'LE': [0,    106, 296, 556, 816],  'ME': [0,    137, 342], 'HE': [0,   14, 24, 37, 60]}
+    chs_max={'LE': [1535, 295, 555, 815, 1288], 'ME': [1023, 341, 546], 'HE': [255, 23, 36, 59, 93]}
     # FFT
-    n_bin=2**12
+    n_bin=2**15
     n_int=100
     maximize=True
     frac_gap=0
     # PSD/CSD
-    rebin=1.4
-
-    #####################
-    ### Power spectra ###
-    #####################
-    # --- #
-    #n_dir=12
-    #names_dir_raw=['./P0114661003_lc/P0114661003{0:02}/'.format(i+1) for i in range(n_dir)]
-    #names_dir_pro=['./P0114661003{0:02}_product/'.format(i+1) for i in range(n_dir)]
-    ## Common data extraction
-    #e_min_le=2.6
-    #e_max_le=4.8
-    #e_min_me=7
-    #e_max_me=11
-    #e_min_he=25
-    #e_max_he=35
-    ## Energy bands
-    #es_min       =[2.6,   4.8, 7,    7,    11,   23,   25,   35,   48,   67,   100,  150]
-    #es_max       =[4.8,   7,   11,   11,   23,   35,   35,   48,   67,   100,  150,  200]
-    #instruments  =['LE', 'LE', 'LE', 'ME', 'ME', 'ME', 'HE', 'HE', 'HE', 'HE', 'HE', 'HE']
-    ## Reference band
-    #e_ref_min      =2.6
-    #e_ref_max      =4.8
-    #instrument_ref ='LE'
-    #### Light curve rebining ###
-    #dt_rebin=1./128. #[s]
-    #### FFT ###
-    #n_bin=2**15
-    #n_int=100
-    #maximize=True
-    #frac_gap=0
-    #### PSD, CSD ###
-    #rebin=1.1
-    # --- #
-
-    #####################
-    ### Cross spectra ###
-    #####################
-    #n_dir=12
-    #names_dir_raw=['./P0114661003_lc/P0114661003{0:02}/'.format(i+1) for i in range(n_dir)]
-    #names_dir_pro=['./P0114661003{0:02}_product/'.format(i+1) for i in range(n_dir)]
-    ## Common data extraction
-    #e_min_le=2.6
-    #e_max_le=4.8
-    #e_min_me=7
-    #e_max_me=11
-    #e_min_he=25
-    #e_max_he=35
-    ## Energy bands
-    #es_min       =[2.6,   4.8, 7,    7,    11,   23,   25,   35,   48,   67,   100,  150]
-    #es_max       =[4.8,   7,   11,   11,   23,   35,   35,   48,   67,   100,  150,  200]
-    #instruments  =['LE', 'LE', 'LE', 'ME', 'ME', 'ME', 'HE', 'HE', 'HE', 'HE', 'HE', 'HE']
-    ## Reference band
-    #e_ref_min      =2.6
-    #e_ref_max      =4.8
-    #instrument_ref ='LE'
-    #### Light curve rebining ###
-    #dt_rebin=1./128. #[s]
-    #### FFT ###
-    #n_bin=2**15
-    #n_int=100
-    #maximize=True
-    #frac_gap=0
-    #### PSD, CSD ###
-    #rebin=1.2
-    # --- #
-    #n_dir=1
-    #names_dir_raw=['./P0114661003_lc/P0114661003{0:02}/'.format(i+1) for i in range(n_dir)]
-    #names_dir_pro=['./P0114661003{0:02}_product/'.format(i+1) for i in range(n_dir)]
-    ## Common data extraction
-    #e_min_le=2.6
-    #e_max_le=4.8
-    #e_min_me=7
-    #e_max_me=11
-    #e_min_he=25
-    #e_max_he=35
-    ## Energy bands
-    #es_min       =[2.6]
-    #es_max       =[4.8]
-    #instruments  =['LE']
-    ## Reference band
-    #e_ref_min      =2.6
-    #e_ref_max      =4.8
-    #instrument_ref ='LE'
-    #### Light curve rebining ###
-    #dt_rebin=1./128. #[s]
-    #### FFT ###
-    #n_bin=2**15
-    #n_int=100
-    #maximize=True
-    #frac_gap=0
-    #### PSD, CSD ###
-    #rebin=1.2
+    rebin=1.1
     # --- #
 
     # -------------------------- #
@@ -125,27 +31,25 @@ def main():
     #########################
     # ----- Single process ----- #
     #for instrument in instruments:
-    #    for obsid in obsids:
-    #        for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
-    #            name_inlc='HXMT_{0}_{1}-Evt_FFFFFF_V1_L1P_lc_{2:04}_{3:04}_net.lc'.format(obsid, instrument, int(ch_min), int(ch_max))
-    #            name_outfits='HXMT_{0}_{1}_{2:04}_{3:04}_net_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
-    #            pars=[name_inlc, name_outfits, ch_min, ch_max, instrument, n_bin, n_int, maximize, frac_gap]
-    #            command_do_fft(pars=pars)
+    #    for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
+    #        name_inlc   ='HXMT_{0}_{1}_{2:04}_{3:04}_net.lc'.format(obsid, instrument, int(ch_min), int(ch_max))
+    #        name_outfits='HXMT_{0}_{1}_{2:04}_{3:04}_net_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
+    #        pars=[name_inlc, name_outfits, ch_min, ch_max, instrument, n_bin, n_int, maximize, frac_gap]
+    #        command_do_fft(pars=pars)
 
     # ----- Multi process ----- #
     time_start=time.time()
     first=True
     for instrument in instruments:
-        for obsid in obsids:
-            for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
-                name_inlc='HXMT_{0}_{1}-Evt_FFFFFF_V1_L1P_lc_{2:04}_{3:04}_net.lc'.format(obsid, instrument, int(ch_min), int(ch_max))
-                name_outfits='HXMT_{0}_{1}_{2:04}_{3:04}_net_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
-                pars=[name_inlc, name_outfits, ch_min, ch_max, instrument, n_bin, n_int, maximize, frac_gap]
-                if first==True:
-                    first=False
-                    parss=[pars]
-                else:
-                    parss.append(pars)
+        for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
+            name_inlc   ='HXMT_{0}_{1}_{2:04}_{3:04}_net.lc'.format(obsid, instrument, int(ch_min), int(ch_max))
+            name_outfits='HXMT_{0}_{1}_{2:04}_{3:04}_net_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
+            pars=[name_inlc, name_outfits, ch_min, ch_max, instrument, n_bin, n_int, maximize, frac_gap]
+            if first==True:
+                first=False
+                parss=[pars]
+            else:
+                parss.append(pars)
     with ProcessPoolExecutor() as executor:
         executor.map(command_do_fft, parss)
     time_end=time.time()
@@ -159,27 +63,25 @@ def main():
     #########################
     # ----- Single process ----- #
     #for instrument in instruments:
-    #    for obsid in obsids:
-    #        for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
-    #            name_infits='HXMT_{0}_{1}_{2:04}_{3:04}_net_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
-    #            name_outfits=name_infits.replace('_fft.fits', '_psd.fits')
-    #            pars=[name_infits, name_outfits, ch_min, ch_max, instrument, rebin]
-    #            command_do_calc_psd(pars=pars)
+    #    for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
+    #        name_infits='HXMT_{0}_{1}_{2:04}_{3:04}_net_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
+    #        name_outfits=name_infits.replace('_fft.fits', '_psd.fits')
+    #        pars=[name_infits, name_outfits, ch_min, ch_max, instrument, rebin]
+    #        command_do_calc_psd(pars=pars)
 
     # ----- Multi process ----- #
     time_start=time.time()
     first=True
     for instrument in instruments:
-        for obsid in obsids:
-            for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
-                name_infits='HXMT_{0}_{1}_{2:04}_{3:04}_net_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
-                name_outfits=name_infits.replace('_fft.fits', '_psd.fits')
-                pars=[name_infits, name_outfits, ch_min, ch_max, instrument, rebin]
-                if first==True:
-                    first=False
-                    parss=[pars]
-                else:
-                    parss.append(pars)
+        for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
+            name_infits='HXMT_{0}_{1}_{2:04}_{3:04}_net_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
+            name_outfits=name_infits.replace('_fft.fits', '_psd.fits')
+            pars=[name_infits, name_outfits, ch_min, ch_max, instrument, rebin]
+            if first==True:
+                first=False
+                parss=[pars]
+            else:
+                parss.append(pars)
     with ProcessPoolExecutor() as executor:
         executor.map(command_do_calc_psd, parss)
     time_end=time.time()
