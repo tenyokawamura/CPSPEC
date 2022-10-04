@@ -11,9 +11,9 @@ class PowerSpectrum:
         psds=norm*(np.abs(bs)**2)
 
         if self.first_psd==True:
-            self.rates_mea    =rate_mea
-            self.rates_var_mea=rate_var_mea # Necessary for Gaussian noise (2022/02/02)
-            self.psdss=psds
+            self.rates_mea    =np.array([rate_mea])
+            self.rates_var_mea=np.array([rate_var_mea]) # Necessary for Gaussian noise (2022/02/02)
+            self.psdss=np.array([psds])
             self.first_psd=False
         else:
             self.rates_mea    =np.append(self.rates_mea,     rate_mea)

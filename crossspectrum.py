@@ -30,10 +30,10 @@ class CrossSpectrum:
 
         # Store data
         if self.first_csd==True:
-            self.rates_mea   =rate_mea
-            self.rate_ref_mea=rate_ref_mea
-            self.csdss       =csds
-            self.csds_noi_overlap=csd_noi_overlap
+            self.rates_mea   =np.array([rate_mea])
+            self.rate_ref_mea=np.array([rate_ref_mea])
+            self.csdss       =np.array([csds])
+            self.csds_noi_overlap=np.array([csd_noi_overlap])
             self.first_csd   =False
         else:
             self.rates_mea=np.append(self.rates_mea,     rate_mea)

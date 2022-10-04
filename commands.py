@@ -11,9 +11,13 @@ def main():
     # --- #
     obsid='P0114661036'
     instruments=['LE', 'ME', 'HE']
-    n_seg=3
-    chs_min={'LE': [0,    106, 296, 556, 816],  'ME': [0,    137, 342], 'HE': [0,   14, 24, 37, 60]}
-    chs_max={'LE': [1535, 295, 555, 815, 1288], 'ME': [1023, 341, 546], 'HE': [255, 23, 36, 59, 93]}
+    #chs_min={'LE': [0,    106, 296, 556, 816],  'ME': [0,    137, 342], 'HE': [0,   14, 24, 37, 60]}
+    #chs_max={'LE': [1535, 295, 555, 815, 1288], 'ME': [1023, 341, 546], 'HE': [255, 23, 36, 59, 93]}
+    chs_min={'LE': [106, 296, 556, 816],  'ME': [137, 342], 'HE': [14, 24, 37, 60]}
+    chs_max={'LE': [295, 555, 815, 1288], 'ME': [341, 546], 'HE': [23, 36, 59, 93]}
+    instrument_ref='LE'
+    ch_ref_min=296
+    ch_ref_max=555
     # FFT
     n_bin=2**15
     n_int=100
@@ -21,6 +25,9 @@ def main():
     frac_gap=0
     # PSD/CSD
     rebin=1.1
+    # Operations
+    operations={'FFT': False, 'PSD': False, 'CSDF': True}
+    multi=True
     # --- #
 
     # -------------------------- #
@@ -29,100 +36,121 @@ def main():
     #########################
     ########## FFT ##########
     #########################
-    # ----- Single process ----- #
-    #for instrument in instruments:
-    #    for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
-    #        name_inlc   ='HXMT_{0}_{1}_{2:04}_{3:04}_net.lc'.format(obsid, instrument, int(ch_min), int(ch_max))
-    #        name_outfits='HXMT_{0}_{1}_{2:04}_{3:04}_net_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
-    #        pars=[name_inlc, name_outfits, ch_min, ch_max, instrument, n_bin, n_int, maximize, frac_gap]
-    #        command_do_fft(pars=pars)
+    if operations['FFT']==True:
+        if multi==False:
+            # ----- Single process ----- #
+            for instrument in instruments:
+                for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
+                    name_inlc   ='HXMT_{0}_{1}_{2:04}_{3:04}_net_common.lc'.format(obsid, instrument, int(ch_min), int(ch_max))
+                    name_outfits='HXMT_{0}_{1}_{2:04}_{3:04}_net_common_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
+                    pars=[name_inlc, name_outfits, ch_min, ch_max, instrument, n_bin, n_int, maximize, frac_gap]
+                    command_do_fft(pars=pars)
 
-    # ----- Multi process ----- #
-    time_start=time.time()
-    first=True
-    for instrument in instruments:
-        for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
-            name_inlc   ='HXMT_{0}_{1}_{2:04}_{3:04}_net.lc'.format(obsid, instrument, int(ch_min), int(ch_max))
-            name_outfits='HXMT_{0}_{1}_{2:04}_{3:04}_net_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
-            pars=[name_inlc, name_outfits, ch_min, ch_max, instrument, n_bin, n_int, maximize, frac_gap]
-            if first==True:
-                first=False
-                parss=[pars]
-            else:
-                parss.append(pars)
-    with ProcessPoolExecutor() as executor:
-        executor.map(command_do_fft, parss)
-    time_end=time.time()
-    time_process=time_end-time_start
-    print('------------------------------')
-    print('(Process efficiency for FFT)')
-    print('Run time: {0:.1f} s'.format(time_process))
+        elif multi==True:
+            # ----- Multi process ----- #
+            time_start=time.time()
+            first=True
+            for instrument in instruments:
+                for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
+                    name_inlc   ='HXMT_{0}_{1}_{2:04}_{3:04}_net_common.lc'      .format(obsid, instrument, int(ch_min), int(ch_max))
+                    name_outfits='HXMT_{0}_{1}_{2:04}_{3:04}_net_common_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
+                    pars=[name_inlc, name_outfits, ch_min, ch_max, instrument, n_bin, n_int, maximize, frac_gap]
+                    if first==True:
+                        first=False
+                        parss=[pars]
+                    else:
+                        parss.append(pars)
+            with ProcessPoolExecutor() as executor:
+                executor.map(command_do_fft, parss)
+            time_end=time.time()
+            time_process=time_end-time_start
+            print('------------------------------')
+            print('(Process efficiency for FFT)')
+            print('Run time: {0:.1f} s'.format(time_process))
 
     #########################
     ########## PSD ##########
     #########################
-    # ----- Single process ----- #
-    #for instrument in instruments:
-    #    for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
-    #        name_infits='HXMT_{0}_{1}_{2:04}_{3:04}_net_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
-    #        name_outfits=name_infits.replace('_fft.fits', '_psd.fits')
-    #        pars=[name_infits, name_outfits, ch_min, ch_max, instrument, rebin]
-    #        command_do_calc_psd(pars=pars)
+    if operations['PSD']==True:
+        if multi==False:
+            # ----- Single process ----- #
+            for instrument in instruments:
+                for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
+                    name_infits ='HXMT_{0}_{1}_{2:04}_{3:04}_net_common_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
+                    name_outfits='HXMT_{0}_{1}_{2:04}_{3:04}_net_common_psd.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
+                    pars=[name_infits, name_outfits, ch_min, ch_max, instrument, rebin]
+                    command_do_calc_psd(pars=pars)
 
-    # ----- Multi process ----- #
-    time_start=time.time()
-    first=True
-    for instrument in instruments:
-        for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
-            name_infits='HXMT_{0}_{1}_{2:04}_{3:04}_net_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
-            name_outfits=name_infits.replace('_fft.fits', '_psd.fits')
-            pars=[name_infits, name_outfits, ch_min, ch_max, instrument, rebin]
-            if first==True:
-                first=False
-                parss=[pars]
-            else:
-                parss.append(pars)
-    with ProcessPoolExecutor() as executor:
-        executor.map(command_do_calc_psd, parss)
-    time_end=time.time()
-    time_process=time_end-time_start
-    print('------------------------------')
-    print('(Process efficiency for calculating PSD)')
-    print('Run time: {0:.1f} s'.format(time_process))
+        elif multi==True:
+            # ----- Multi process ----- #
+            time_start=time.time()
+            first=True
+            for instrument in instruments:
+                for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
+                    name_infits ='HXMT_{0}_{1}_{2:04}_{3:04}_net_common_fft.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
+                    name_outfits='HXMT_{0}_{1}_{2:04}_{3:04}_net_common_psd.fits'.format(obsid, instrument, int(ch_min), int(ch_max))
+                    pars=[name_infits, name_outfits, ch_min, ch_max, instrument, rebin]
+                    if first==True:
+                        first=False
+                        parss=[pars]
+                    else:
+                        parss.append(pars)
+            with ProcessPoolExecutor() as executor:
+                executor.map(command_do_calc_psd, parss)
+            time_end=time.time()
+            time_process=time_end-time_start
+            print('------------------------------')
+            print('(Process efficiency for calculating PSD)')
+            print('Run time: {0:.1f} s'.format(time_process))
 
     #########################
     ########## CSD ##########
     #########################
-    # ----- Single process ----- #
-    #for name_dir_raw, name_dir_pro in zip(names_dir_raw, names_dir_pro):
-    #    for e_min, e_max, instrument in zip(es_min, es_max, instruments):
-    #        pars=[name_dir_pro,\
-    #            e_min,     e_max,     instrument,\
-    #            e_ref_min, e_ref_max, instrument_ref,\
-    #            rebin]
-    #        command_do_calc_csdf(pars=pars)
+    if operations['CSDF']==True:
+        if multi==False:
+            # ----- Single process ----- #
+            for instrument in instruments:
+                for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
+                    name_infits_ref    ='HXMT_{0}_{1}_{2:04}_{3:04}_net_common_fft.fits' .format(obsid, instrument_ref, int(ch_ref_min), int(ch_ref_max))
+                    name_infits        ='HXMT_{0}_{1}_{2:04}_{3:04}_net_common_fft.fits' .format(obsid, instrument,     int(ch_min),     int(ch_max))
+                    name_infits_psd_ref='HXMT_{0}_{1}_{2:04}_{3:04}_net_common_psd.fits' .format(obsid, instrument_ref, int(ch_ref_min), int(ch_ref_max))
+                    name_infits_psd    ='HXMT_{0}_{1}_{2:04}_{3:04}_net_common_psd.fits' .format(obsid, instrument,     int(ch_min),     int(ch_max))
+                    name_outfits       ='HXMT_{0}_{1}_{2:04}_{3:04}_{4}_{5:04}_{6:04}_net_common_csdf.fits'.format(obsid, instrument_ref, int(ch_ref_min), int(ch_ref_max), instrument, int(ch_min), int(ch_max))
+                    if ((ch_ref_min<=ch_min) & (ch_max<=ch_ref_max) & (instrument==instrument_ref)):
+                        overlap=True
+                    else:
+                        overlap=False
+                    pars=[name_infits_ref, name_infits, name_infits_psd_ref, name_infits_psd, name_outfits, overlap, rebin]
+                    command_do_calc_csdf(pars=pars)
 
-    # ----- Multi process ----- #
-    #time_start=time.time()
-    #first=True
-    #for name_dir_raw, name_dir_pro in zip(names_dir_raw, names_dir_pro):
-    #    for e_min, e_max, instrument in zip(es_min, es_max, instruments):
-    #        pars=[name_dir_pro,\
-    #            e_min,     e_max,     instrument,\
-    #            e_ref_min, e_ref_max, instrument_ref,\
-    #            rebin]
-    #        if first==True:
-    #            first=False
-    #            parss=[pars]
-    #        else:
-    #            parss.append(pars)
-    #with ProcessPoolExecutor() as executor:
-    #    executor.map(command_do_calc_csdf, parss)
-    #time_end=time.time()
-    #time_process=time_end-time_start
-    #print('------------------------------')
-    #print('(Process efficiency for calculating CSD)')
-    #print('Run time: {0:.1f} s'.format(time_process))
+        elif multi==True:
+            # ----- Multi process ----- #
+            time_start=time.time()
+            first=True
+            for instrument in instruments:
+                for ch_min, ch_max in zip(chs_min[instrument], chs_max[instrument]):
+                    name_infits_ref    ='HXMT_{0}_{1}_{2:04}_{3:04}_net_common_fft.fits' .format(obsid, instrument_ref, int(ch_ref_min), int(ch_ref_max))
+                    name_infits        ='HXMT_{0}_{1}_{2:04}_{3:04}_net_common_fft.fits' .format(obsid, instrument,     int(ch_min),     int(ch_max))
+                    name_infits_psd_ref='HXMT_{0}_{1}_{2:04}_{3:04}_net_common_psd.fits' .format(obsid, instrument_ref, int(ch_ref_min), int(ch_ref_max))
+                    name_infits_psd    ='HXMT_{0}_{1}_{2:04}_{3:04}_net_common_psd.fits' .format(obsid, instrument,     int(ch_min),     int(ch_max))
+                    name_outfits       ='HXMT_{0}_{1}_{2:04}_{3:04}_{4}_{5:04}_{6:04}_net_common_csdf.fits'.format(obsid, instrument_ref, int(ch_ref_min), int(ch_ref_max), instrument, int(ch_min), int(ch_max))
+                    if ((ch_ref_min<=ch_min) & (ch_max<=ch_ref_max) & (instrument==instrument_ref)):
+                        overlap=True
+                    else:
+                        overlap=False
+                    pars=[name_infits_ref, name_infits, name_infits_psd_ref, name_infits_psd, name_outfits, overlap, rebin]
+                    if first==True:
+                        first=False
+                        parss=[pars]
+                    else:
+                        parss.append(pars)
+            with ProcessPoolExecutor() as executor:
+                executor.map(command_do_calc_csdf, parss)
+            time_end=time.time()
+            time_process=time_end-time_start
+            print('------------------------------')
+            print('(Process efficiency for calculating CSD)')
+            print('Run time: {0:.1f} s'.format(time_process))
 
 def command_do_convert_counts2rate(pars):
     name_dir_raw=pars[0]
@@ -284,48 +312,75 @@ def command_do_calc_psd(pars):
     subprocess.run(tokens)
 
 def command_do_calc_csdf(pars):
-    name_dir_pro  =pars[0]
-    e_min         =pars[1]
-    e_max         =pars[2]
-    instrument    =pars[3]
-    e_ref_min     =pars[4]
-    e_ref_max     =pars[5]
-    instrument_ref=pars[6]
-    rebin         =pars[7]
+    name_infits_ref    =pars[0]
+    name_infits        =pars[1]
+    name_infits_psd_ref=pars[2]
+    name_infits_psd    =pars[3]
+    name_outfits       =pars[4]
+    overlap            =pars[5]
+    rebin              =pars[6]
 
-    name_infits_fft_ref=name_dir_pro+'{0}_net_{1:04}_{2:04}_rebin_common_fft.fits'.format(instrument_ref, int(e_ref_min), int(e_ref_max))
-    name_infits_psd_ref=name_dir_pro+'{0}_net_{1:04}_{2:04}_rebin_common_psd.fits'.format(instrument_ref, int(e_ref_min), int(e_ref_max))
-    exist=os.path.exists(name_infits_fft_ref)
-    if exist==False:
-        print('Warning: {0} does not exist.'.format(name_infits_fft_ref))
+    # File (directory) existence
+    if os.path.exists(name_infits_ref)==False:
+        print('Warning: {0} does not exist.'.format(name_infits_ref))
         return
-    exist=os.path.exists(name_infits_psd_ref)
-    if exist==False:
+    if os.path.exists(name_infits)==False:
+        print('Warning: {0} does not exist.'.format(name_infits))
+        return
+    if os.path.exists(name_infits_psd_ref)==False:
         print('Warning: {0} does not exist.'.format(name_infits_psd_ref))
         return
-
-    name_infits_fft=name_dir_pro+'{0}_net_{1:04}_{2:04}_rebin_common_fft.fits'.format(instrument, int(e_min), int(e_max))
-    name_infits_psd=name_dir_pro+'{0}_net_{1:04}_{2:04}_rebin_common_psd.fits'.format(instrument, int(e_min), int(e_max))
-    exist=os.path.exists(name_infits_fft)
-    if exist==False:
-        print('Warning: {0} does not exist.'.format(name_infits_fft))
-        return
-    exist=os.path.exists(name_infits_psd)
-    if exist==False:
+    if os.path.exists(name_infits_psd)==False:
         print('Warning: {0} does not exist.'.format(name_infits_psd))
         return
-    name_outfits=name_dir_pro+'{0}_net_{1:04}_{2:04}_{3}_net_{4:04}_{5:04}_rebin_common_csdf.fits'\
-        .format(instrument, int(e_min), int(e_max), instrument_ref, int(e_ref_min), int(e_ref_max))
-
-    # Assume that (e_min<=e_ref_min) & (e_ref_max<=e_max) & (instrument_ref==instrument) = False
-    if ((e_ref_min<=e_min) & (e_max<=e_ref_max) & (instrument==instrument_ref)):
-        overlap=True
-    else:
-        overlap=False
     cmd='python do_calc_csdf.py {0} {1} {2} {3} {4} {5} {6}'\
-        .format(rebin, overlap, name_infits_fft, name_infits_fft_ref, name_infits_psd, name_infits_psd_ref, name_outfits)
+        .format(rebin, overlap, name_infits, name_infits_ref, name_infits_psd, name_infits_psd_ref, name_outfits)
     tokens=shlex.split(cmd)
     subprocess.run(tokens)
+
+#def command_do_calc_csdf(pars):
+#    name_dir_pro  =pars[0]
+#    e_min         =pars[1]
+#    e_max         =pars[2]
+#    instrument    =pars[3]
+#    e_ref_min     =pars[4]
+#    e_ref_max     =pars[5]
+#    instrument_ref=pars[6]
+#    rebin         =pars[7]
+#
+#    name_infits_fft_ref=name_dir_pro+'{0}_net_{1:04}_{2:04}_rebin_common_fft.fits'.format(instrument_ref, int(e_ref_min), int(e_ref_max))
+#    name_infits_psd_ref=name_dir_pro+'{0}_net_{1:04}_{2:04}_rebin_common_psd.fits'.format(instrument_ref, int(e_ref_min), int(e_ref_max))
+#    exist=os.path.exists(name_infits_fft_ref)
+#    if exist==False:
+#        print('Warning: {0} does not exist.'.format(name_infits_fft_ref))
+#        return
+#    exist=os.path.exists(name_infits_psd_ref)
+#    if exist==False:
+#        print('Warning: {0} does not exist.'.format(name_infits_psd_ref))
+#        return
+#
+#    name_infits_fft=name_dir_pro+'{0}_net_{1:04}_{2:04}_rebin_common_fft.fits'.format(instrument, int(e_min), int(e_max))
+#    name_infits_psd=name_dir_pro+'{0}_net_{1:04}_{2:04}_rebin_common_psd.fits'.format(instrument, int(e_min), int(e_max))
+#    exist=os.path.exists(name_infits_fft)
+#    if exist==False:
+#        print('Warning: {0} does not exist.'.format(name_infits_fft))
+#        return
+#    exist=os.path.exists(name_infits_psd)
+#    if exist==False:
+#        print('Warning: {0} does not exist.'.format(name_infits_psd))
+#        return
+#    name_outfits=name_dir_pro+'{0}_net_{1:04}_{2:04}_{3}_net_{4:04}_{5:04}_rebin_common_csdf.fits'\
+#        .format(instrument, int(e_min), int(e_max), instrument_ref, int(e_ref_min), int(e_ref_max))
+#
+#    # Assume that (e_min<=e_ref_min) & (e_ref_max<=e_max) & (instrument_ref==instrument) = False
+#    if ((e_ref_min<=e_min) & (e_max<=e_ref_max) & (instrument==instrument_ref)):
+#        overlap=True
+#    else:
+#        overlap=False
+#    cmd='python do_calc_csdf.py {0} {1} {2} {3} {4} {5} {6}'\
+#        .format(rebin, overlap, name_infits_fft, name_infits_fft_ref, name_infits_psd, name_infits_psd_ref, name_outfits)
+#    tokens=shlex.split(cmd)
+#    subprocess.run(tokens)
 
 if __name__=='__main__':
     main()
